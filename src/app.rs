@@ -18,10 +18,6 @@ impl AppState {
         self.dirty = !self.dirty;
     }
 
-    pub fn dirty(&self) -> bool {
-        self.dirty
-    }
-
     pub fn for_user(user: User) -> AppState {
         AppState {
             dirty: true,
@@ -41,9 +37,11 @@ pub struct App<'a> {
 pub trait Component {
     fn render(&mut self, screen: &mut Write, palette: &Palette) -> Result<(), io::Error>;
     fn handle_event(&mut self, event: Event);
+    fn dirty(&self) -> bool;
 }
 
 pub struct PullRequestList<'a> {
+    dirty: bool,
     items: Vec<PullRequest<'a>>,
     hovered_index: Option<usize>,
 }
@@ -51,6 +49,7 @@ pub struct PullRequestList<'a> {
 impl<'a> PullRequestList<'a> {
     pub fn new(pull_requests: Vec<PullRequest<'a>>) -> PullRequestList<'a> {
         PullRequestList {
+            dirty: true,
             items: pull_requests,
             hovered_index: None,
         }
@@ -67,6 +66,8 @@ impl<'a> PullRequestList<'a> {
                 }
             }
         }
+
+        self.dirty = true;
     }
 
     pub fn hover_up(&mut self) {
@@ -80,10 +81,24 @@ impl<'a> PullRequestList<'a> {
                 }
             }
         }
+
+        self.dirty = true;
+    }
+
+    pub fn request_selection(&self) -> Option<PullRequest<'a>> {
+        if let Some(index) = self.hovered_index {
+            let item: &PullRequest<'a> = &self.items[index];
+            return Some(item.clone());
+        }
+        None
     }
 }
 
 impl<'a> Component for PullRequestList<'a> {
+    fn dirty(&self) -> bool {
+        self.dirty
+    }
+
     fn handle_event(&mut self, event: Event) {
         match event {
             Event::Move(direction) => match direction {
@@ -93,7 +108,6 @@ impl<'a> Component for PullRequestList<'a> {
             },
             _ => {}
         }
-        debug!("Hovered Index: {:?}", self.hovered_index);
     }
 
     fn render(&mut self, screen: &mut Write, palette: &Palette) -> Result<(), io::Error> {
@@ -156,6 +170,7 @@ impl<'a> Component for PullRequestList<'a> {
             write!(screen, "{}{}", ui::clear_rest(), palette.dual_reset())?;
         }
 
+        self.dirty = false;
         Ok(())
     }
 }
@@ -173,8 +188,12 @@ impl<'a> App<'a> {
         self.state.quitting
     }
 
+    fn dirty(&self) -> bool {
+        self.views[self.state.view_index].dirty()
+    }
+
     pub fn render(&mut self, screen: &mut Write) -> Result<(), io::Error> {
-        if self.state.dirty() {
+        if self.dirty() {
             debug!("[app  ] Ui is dirty - rendering...");
             write!(screen, "{}{}", self.palette.dual_reset(), ui::clear_all()).unwrap();
             self.views[self.state.view_index].render(screen, &self.palette)?;
