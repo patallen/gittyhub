@@ -33,6 +33,13 @@ pub fn pull_requests<'a>(user: User) -> Result<Vec<PullRequest<'a>>, io::Error> 
             "'nuff said",
             user.clone(),
         ),
+        PullRequest::new(
+            3,
+            109,
+            "Refactor the backend buff-related structures",
+            "...",
+            user.clone(),
+        ),
     ];
     Ok(prs)
 }

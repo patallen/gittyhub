@@ -70,3 +70,7 @@ pub fn cursor_hide() -> String {
 pub fn cursor_show() -> String {
     format!("{}", cursor::Show)
 }
+
+pub fn clear_rest() -> String {
+    format!("{}", clear::UntilNewline)
+}
