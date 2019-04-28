@@ -1,5 +1,6 @@
 use super::user::User;
 
+#[derive(Debug, Clone)]
 pub struct PullRequest<'a> {
     pub owner: User,
     pub number: usize,

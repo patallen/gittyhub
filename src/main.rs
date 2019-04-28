@@ -1,14 +1,17 @@
 #[macro_use]
 extern crate log;
 
+mod app;
 mod mock;
 mod models;
 mod ui;
 
+use app::{App, AppState};
 use ui::Palette;
 
+use app::PullRequestList;
+use app::Render;
 use std::io::{stdin, stdout, Write};
-
 use termion::event::{Event, Key};
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
@@ -18,27 +21,17 @@ fn main() {
     log4rs::init_file("logging.yaml", Default::default()).unwrap();
 
     let mut screen = AlternateScreen::from(stdout().into_raw_mode().unwrap());
-    let user = mock::user("patallen");
 
-    let pulls = mock::pull_requests(user.unwrap());
     let palette = Palette::default();
 
-    write!(screen, "{}{}", palette.dual_reset(), ui::clear_all()).unwrap();
+    let user = mock::user("patallen").unwrap();
+    let state = AppState::for_user(user.clone());
+    let pulls = mock::pull_requests(user.clone()).unwrap();
+    let views: Vec<Box<dyn Render>> = vec![Box::new(PullRequestList::new(pulls))];
 
-    for (i, pull) in pulls.unwrap().iter().enumerate() {
-        write!(
-            screen,
-            "{}{}{}{}\n",
-            ui::goto(1, i + 1),
-            ui::color_fg(&format!("#{} ", pull.number), palette.fg_alt4),
-            ui::color_fg(pull.title, palette.fg_alt2),
-            ui::color_fg(&format!(" ({})", pull.owner.login), palette.fg_alt3),
-        )
-        .unwrap();
-    }
-    write!(screen, "{}", ui::cursor_hide()).unwrap();
+    let mut app = App::new(palette, state, views);
 
-    screen.flush().unwrap();
+    app.render(&mut screen).unwrap();
 
     'main: loop {
         let stdin = stdin();
