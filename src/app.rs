@@ -1,6 +1,9 @@
-use crate::events::Event;
+use crate::events::{Command, Event};
+use crate::mock;
 use crate::models::User;
 use crate::ui::{self, Component, Palette};
+use crate::views::{FullPullRequest, PullRequestList};
+use std::collections::VecDeque;
 use std::io::{self, Write};
 
 /// Stores relevant state for the Application
@@ -9,6 +12,26 @@ pub struct AppState {
     view_index: usize,
     quitting: bool,
     pub user: User,
+}
+
+pub struct Stack<T> {
+    inner: VecDeque<T>,
+}
+
+impl<T> Stack<T> {
+    pub fn push(&mut self, item: T) {
+        self.inner.push_front(item)
+    }
+
+    pub fn new() -> Stack<T> {
+        Stack {
+            inner: VecDeque::new(),
+        }
+    }
+
+    pub fn pop(&mut self) -> Option<T> {
+        self.inner.pop_front()
+    }
 }
 
 impl AppState {
@@ -52,15 +75,18 @@ impl AppState {
 pub struct App<'a> {
     palette: Palette<'a>,
     state: AppState,
-    views: Vec<Box<dyn Component>>,
+    current_view: Box<dyn Component<'a>>,
+    history: Stack<Box<dyn Component<'a>>>,
 }
 
 impl<'a> App<'a> {
-    pub fn new(palette: Palette<'a>, state: AppState, views: Vec<Box<dyn Component>>) -> App<'a> {
+    pub fn new(palette: Palette<'a>, state: AppState) -> App<'a> {
+        let prs = mock::pull_requests(mock::user("pat").unwrap()).unwrap();
         App {
             palette,
             state,
-            views,
+            history: Stack::new(),
+            current_view: Box::new(PullRequestList::new(prs)),
         }
     }
 
@@ -69,14 +95,14 @@ impl<'a> App<'a> {
     }
 
     fn dirty(&self) -> bool {
-        self.views[self.state.view_index].dirty()
+        self.current_view.dirty()
     }
 
     pub fn render(&mut self, screen: &mut Write) -> Result<(), io::Error> {
         if self.dirty() {
             debug!("[app  ] Ui is dirty - rendering...");
             write!(screen, "{}{}", self.palette.dual_reset(), ui::clear_all()).unwrap();
-            self.views[self.state.view_index].render(screen, &self.palette)?;
+            self.current_view.render(screen, &self.palette)?;
             write!(screen, "{}", ui::cursor_hide())?;
             screen.flush()?;
             self.state.toggle_dirty()
@@ -88,9 +114,28 @@ impl<'a> App<'a> {
 
     pub fn handle_event(&mut self, event: Event) {
         debug!("[app  ] Handling event: {:?}", event);
+
+        let command: Option<Command> = self.current_view.select();
+
         match event {
             Event::Quit => self.state.quitting = true,
-            _ => self.views[self.state.view_index].handle_event(event),
+            Event::Select => {
+                if let Some(command) = command {
+                    debug!("[CMD]: {:?}", command);
+                    match command {
+                        Command::ShowPull(pr) => {
+                            self.current_view = Box::new(FullPullRequest::new(pr));
+                        }
+                        Command::Back => {
+                            if let Some(view) = self.history.pop() {
+                                self.current_view = view;
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            _ => self.current_view.handle_event(event),
         };
         self.state.toggle_dirty();
     }

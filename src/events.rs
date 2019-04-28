@@ -1,9 +1,17 @@
+use crate::models::PullRequest;
 use std::io::stdin;
 use std::sync::mpsc;
 use std::sync::mpsc::Receiver;
 use std::thread;
 use termion::event::Key;
 use termion::input::TermRead;
+
+#[derive(Debug)]
+pub enum Command {
+    ListPulls(Vec<PullRequest>),
+    ShowPull(Box<PullRequest>),
+    Back,
+}
 
 /// Represents direction of keyboard movements
 #[derive(Debug, Clone)]
@@ -17,6 +25,7 @@ pub enum Direction {
 /// Represents an event from the EventPump
 #[derive(Debug, Clone)]
 pub enum Event {
+    Select,
     Quit,
     Move(Direction),
     Back,
@@ -61,12 +70,12 @@ impl EventPump {
         thread::spawn(move || loop {
             for event in stdin().events() {
                 use termion::event::Event as Te;
-
                 let event = event.unwrap();
                 let app_event = match event {
                     Te::Key(Key::Esc) => Some(Event::Quit),
                     Te::Key(Key::Backspace) => Some(Event::Back),
                     Te::Key(Key::Char(ch)) => match ch {
+                        '\n' => Some(Event::Select),
                         'q' => Some(Event::Quit),
                         'j' => Some(Event::Move(Direction::Down)),
                         'k' => Some(Event::Move(Direction::Up)),

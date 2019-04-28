@@ -14,8 +14,7 @@ use events::EventPump;
 use std::io::{stdout, Write};
 use termion::raw::IntoRawMode;
 use termion::screen::*;
-use ui::{Component, Palette};
-use views::PullRequestList;
+use ui::Palette;
 
 fn main() {
     log4rs::init_file("logging.yaml", Default::default()).unwrap();
@@ -26,10 +25,8 @@ fn main() {
 
     let user = mock::user("patallen").unwrap();
     let state = AppState::for_user(user.clone());
-    let pulls = mock::pull_requests(user.clone()).unwrap();
-    let views: Vec<Box<dyn Component>> = vec![Box::new(PullRequestList::new(pulls))];
 
-    let mut app = App::new(palette, state, views);
+    let mut app = App::new(palette, state);
 
     app.render(&mut screen).unwrap();
 
