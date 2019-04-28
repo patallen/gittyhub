@@ -26,15 +26,15 @@ unsafe impl Send for Event {}
 unsafe impl Sync for Event {}
 
 /// Simple EventPump for receiving events asynchronously.
-pub struct EventLoop {
+pub struct EventPump {
     rx: Receiver<Event>,
 }
 
-impl EventLoop {
+impl EventPump {
     /// Fetch the next event from the receiver.
     /// Example:
     /// ```
-    /// let mut pump = EventLoop::new();
+    /// let mut pump = EventPump::new();
     ///
     /// loop {
     ///     if let Some(event) = pump.next() {
@@ -52,11 +52,11 @@ impl EventLoop {
     /// Create a new EventPump
     /// Example:
     /// ```
-    /// let mut pump = EventLoop::new();
+    /// let mut pump = EventPump::new();
     /// ```
-    pub fn new() -> EventLoop {
+    pub fn new() -> EventPump {
         let (tx, rx) = mpsc::channel();
-        let event_loop = EventLoop { rx: rx };
+        let event_loop = EventPump { rx: rx };
 
         thread::spawn(move || loop {
             for event in stdin().events() {

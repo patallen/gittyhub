@@ -7,15 +7,15 @@ mod events;
 mod mock;
 mod models;
 mod ui;
+mod views;
 
-use app::Component;
-use app::PullRequestList;
 use app::{App, AppState};
-use events::EventLoop;
+use events::EventPump;
 use std::io::{stdout, Write};
 use termion::raw::IntoRawMode;
 use termion::screen::*;
-use ui::Palette;
+use ui::{Component, Palette};
+use views::PullRequestList;
 
 fn main() {
     log4rs::init_file("logging.yaml", Default::default()).unwrap();
@@ -33,11 +33,11 @@ fn main() {
 
     app.render(&mut screen).unwrap();
 
-    let event_loop = EventLoop::new();
+    let event_loop = EventPump::new();
 
     'main: loop {
         if let Some(event) = event_loop.next() {
-            app.handle_event(event.clone());
+            app.handle_event(event);
         }
 
         if app.should_quit() {

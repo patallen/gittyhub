@@ -1,3 +1,4 @@
+/// Helper functions for mocking data and calls to the Github API
 use super::models::{PullRequest, User};
 use std::io;
 

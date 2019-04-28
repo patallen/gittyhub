@@ -1,3 +1,4 @@
+/// Represents a Github user as returned by the Github API
 #[derive(Debug, Clone)]
 pub struct User {
     pub id: usize,
@@ -5,6 +6,7 @@ pub struct User {
     pub url: String,
 }
 
+/// Represents a pull request as returned by the Github API
 #[derive(Debug, Clone)]
 pub struct PullRequest<'a> {
     pub owner: User,
