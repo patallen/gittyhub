@@ -107,6 +107,9 @@ impl<'a> Component for PullRequestList<'a> {
             self.items
                 .iter()
                 .fold(0, |a, x| usize::max(a, x.owner.login.len())),
+            self.items
+                .iter()
+                .fold(0, |a, x| usize::max(a, x.state.len())),
         ];
 
         for (i, item) in &mut self.items.iter().enumerate() {
@@ -136,10 +139,18 @@ impl<'a> Component for PullRequestList<'a> {
 
             write!(
                 screen,
-                "{fg}{login:<width$}",
+                "{fg}{login:<width$} ",
                 fg = Fg(palette.fg_alt4),
                 login = item.owner.login,
                 width = widths[2],
+            )?;
+
+            write!(
+                screen,
+                "{fg}{state:<width$}",
+                fg = Fg(palette.fg_alt5),
+                state = item.state,
+                width = widths[3],
             )?;
 
             write!(screen, "{}{}", ui::clear_rest(), palette.dual_reset())?;
