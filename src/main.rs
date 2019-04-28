@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate log;
+extern crate chrono;
 
 mod app;
 mod events;
@@ -7,17 +8,14 @@ mod mock;
 mod models;
 mod ui;
 
-use app::{App, AppState};
-use ui::Palette;
-
 use app::Component;
 use app::PullRequestList;
-use events::{Direction, Event};
-use std::io::{stdin, stdout, Write};
-use termion::event::Key;
-use termion::input::TermRead;
+use app::{App, AppState};
+use events::EventLoop;
+use std::io::{stdout, Write};
 use termion::raw::IntoRawMode;
 use termion::screen::*;
+use ui::Palette;
 
 fn main() {
     log4rs::init_file("logging.yaml", Default::default()).unwrap();
@@ -35,37 +33,18 @@ fn main() {
 
     app.render(&mut screen).unwrap();
 
+    let event_loop = EventLoop::new();
+
     'main: loop {
-        let stdin = stdin();
-
-        use termion::event::Event as Te;
-
-        for event in stdin.events() {
-            let event = event.unwrap();
-            let app_event = match event {
-                Te::Key(Key::Esc) => Some(Event::Quit),
-                Te::Key(Key::Backspace) => Some(Event::Back),
-                Te::Key(Key::Char(ch)) => match ch {
-                    'q' => Some(Event::Quit),
-                    'j' => Some(Event::Move(Direction::Down)),
-                    'k' => Some(Event::Move(Direction::Up)),
-                    'h' => Some(Event::Move(Direction::Left)),
-                    'l' => Some(Event::Move(Direction::Right)),
-                    _ => None,
-                },
-                _ => None,
-            };
-
-            if let Some(event) = app_event {
-                app.handle_event(event);
-            }
-
-            if app.should_quit() {
-                break 'main;
-            }
-
-            app.render(&mut screen).unwrap();
+        if let Some(event) = event_loop.next() {
+            app.handle_event(event.clone());
         }
+
+        if app.should_quit() {
+            break 'main;
+        }
+
+        app.render(&mut screen).unwrap();
     }
 
     write!(screen, "{}", ui::cursor_show()).unwrap();
