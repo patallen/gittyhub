@@ -76,7 +76,7 @@ pub struct App<'a> {
     palette: Palette<'a>,
     state: AppState,
     current_view: Box<dyn Component<'a>>,
-    history: Stack<Box<dyn Component<'a>>>,
+    history: Stack<Command>,
 }
 
 impl<'a> App<'a> {
@@ -124,15 +124,23 @@ impl<'a> App<'a> {
                     debug!("[CMD]: {:?}", command);
                     match command {
                         Command::ShowPull(pr) => {
+                            self.history.push(Command::ListPulls(
+                                mock::pull_requests(mock::user("pat").unwrap()).unwrap(),
+                            ));
                             self.current_view = Box::new(FullPullRequest::new(pr));
-                        }
-                        Command::Back => {
-                            if let Some(view) = self.history.pop() {
-                                self.current_view = view;
-                            }
                         }
                         _ => {}
                     }
+                }
+            }
+            Event::Back => {
+                if let Some(view) = self.history.pop() {
+                    match view {
+                        Command::ListPulls(prs) => {
+                            self.current_view = Box::new(PullRequestList::new(prs))
+                        }
+                        _ => {}
+                    };
                 }
             }
             _ => self.current_view.handle_event(event),
