@@ -1,4 +1,4 @@
-![Kitty Logo](logo.png "Kitty Logo")
+![Kitty Logo](logo.png)
 
 ##### Do all the things in the gittyhub that you can do on the github.
 ## Setup
