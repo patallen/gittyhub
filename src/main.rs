@@ -5,7 +5,6 @@ extern crate chrono;
 mod app;
 mod events;
 mod gh;
-mod mock;
 mod models;
 mod ui;
 mod views;
