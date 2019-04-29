@@ -10,7 +10,6 @@ use termion::input::TermRead;
 pub enum Command {
     ListPulls(Vec<PullRequest>),
     ShowPull(Box<PullRequest>),
-    Back,
 }
 
 /// Represents direction of keyboard movements

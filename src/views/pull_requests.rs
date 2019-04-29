@@ -19,10 +19,6 @@ impl PullRequestList {
         }
     }
 
-    pub fn into_items(self) -> Vec<PullRequest> {
-        self.items
-    }
-
     pub fn hover_down(&mut self) {
         match self.hovered_index {
             None => self.hovered_index = Some(0),

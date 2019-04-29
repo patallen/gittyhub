@@ -37,11 +37,12 @@ impl<'a> Component<'a> for FullPullRequest {
         Ok(())
     }
 
-    fn handle_event(&mut self, event: Event) {}
+    fn handle_event(&mut self, _event: Event) {}
 
     fn dirty(&self) -> bool {
         return self.dirty;
     }
+
     fn select(&self) -> Option<Command> {
         None
     }
