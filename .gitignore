@@ -1,3 +1,4 @@
 /target
 **/*.rs.bklog/*
 .apikey
+/log
