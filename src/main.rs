@@ -5,7 +5,6 @@ extern crate chrono;
 mod app;
 mod events;
 mod gh;
-mod models;
 mod ui;
 mod views;
 
@@ -33,6 +32,8 @@ directory containing a key obtained from Github.
 fn main() -> Result<(), io::Error> {
     log4rs::init_file("logging.yaml", Default::default()).unwrap();
 
+    let api_key = api_key_from_file(".apikey");
+
     let mut screen = AlternateScreen::from(stdout().into_raw_mode()?);
 
     let palette = Palette::default();
@@ -46,7 +47,6 @@ fn main() -> Result<(), io::Error> {
     };
     let state = AppState::for_user(user.clone());
 
-    let api_key = api_key_from_file(".apikey");
     let client = gh::Client::new(&api_key);
 
     let mut app = App::new(palette, state, client);
