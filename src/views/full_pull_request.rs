@@ -1,9 +1,9 @@
 use crate::events::{Command, Event};
-use crate::models::PullRequest;
+use crate::gh::PullRequest;
 use crate::ui::Component;
 use crate::ui::{self, Palette};
 use std::io::{self, Write};
-use termion::color::{Bg, Fg};
+use termion::color::Fg;
 
 pub struct FullPullRequest {
     dirty: bool,
@@ -31,7 +31,7 @@ impl<'a> Component<'a> for FullPullRequest {
             screen,
             "{}{}\n\r",
             Fg(palette.fg_alt1),
-            self.item.owner.login
+            self.item.user.login
         )?;
         write!(screen, "{}{}", Fg(palette.fg_normal), self.item.body)?;
         Ok(())

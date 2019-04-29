@@ -1,5 +1,5 @@
 use crate::events::{Command, Direction, Event};
-use crate::models::PullRequest;
+use crate::gh::PullRequest;
 use crate::ui::{self, Component, Palette};
 use std::io::{self, Write};
 use termion::color::{Bg, Fg};
@@ -104,7 +104,7 @@ impl PullRequestList {
             screen,
             "{fg}{login:<width$} ",
             fg = Fg(palette.fg_alt4),
-            login = pr.owner.login,
+            login = pr.user.login,
             width = widths[2],
         )?;
 
@@ -154,7 +154,7 @@ impl<'a> Component<'a> for PullRequestList {
                 .fold(0, |a, x| usize::max(a, x.title.len())),
             self.items
                 .iter()
-                .fold(0, |a, x| usize::max(a, x.owner.login.len())),
+                .fold(0, |a, x| usize::max(a, x.user.login.len())),
             self.items
                 .iter()
                 .fold(0, |a, x| usize::max(a, x.state.len())),

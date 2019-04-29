@@ -1,4 +1,4 @@
-use crate::models::PullRequest;
+use crate::gh::PullRequest;
 use std::io::stdin;
 use std::sync::mpsc;
 use std::sync::mpsc::Receiver;

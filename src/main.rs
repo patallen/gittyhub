@@ -4,6 +4,7 @@ extern crate chrono;
 
 mod app;
 mod events;
+mod gh;
 mod mock;
 mod models;
 mod ui;
@@ -11,24 +12,47 @@ mod views;
 
 use app::{App, AppState};
 use events::EventPump;
+use std::fs;
+use std::io;
 use std::io::{stdout, Write};
 use termion::raw::IntoRawMode;
 use termion::screen::*;
 use ui::Palette;
 
-fn main() {
+fn api_key_from_file<'a>(filename: &'a str) -> String {
+    fs::read_to_string(filename).expect(&format!(
+        r##"
+There was an error while attempting to read your Github API key.
+
+Ensure that you have a single-line file named '{}' in root
+directory containing a key obtained from Github.
+"##,
+        filename
+    ))
+}
+
+fn main() -> Result<(), io::Error> {
     log4rs::init_file("logging.yaml", Default::default()).unwrap();
 
-    let mut screen = AlternateScreen::from(stdout().into_raw_mode().unwrap());
+    let mut screen = AlternateScreen::from(stdout().into_raw_mode()?);
 
     let palette = Palette::default();
 
-    let user = mock::user("patallen").unwrap();
+    let user = gh::User {
+        url: "https://github.com/patallen".into(),
+        site_admin: false,
+        avatar_url: "".into(),
+        id: 0,
+        login: "patallen".into(),
+    };
     let state = AppState::for_user(user.clone());
 
-    let mut app = App::new(palette, state);
+    let api_key = api_key_from_file(".apikey");
+    let client = gh::Client::new(&api_key);
 
-    app.render(&mut screen).unwrap();
+    let mut app = App::new(palette, state, client);
+
+    app.render(&mut screen)?;
 
     let event_loop = EventPump::new();
 
@@ -41,9 +65,10 @@ fn main() {
             break 'main;
         }
 
-        app.render(&mut screen).unwrap();
+        app.render(&mut screen)?;
     }
 
-    write!(screen, "{}", ui::cursor_show()).unwrap();
-    screen.flush().unwrap();
+    write!(screen, "{}", ui::cursor_show())?;
+    screen.flush()?;;
+    Ok(())
 }

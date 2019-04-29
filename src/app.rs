@@ -1,15 +1,15 @@
 use crate::events::{Command, Event};
-use crate::mock;
-use crate::models::User;
+use crate::gh;
+use crate::gh::{Client, User};
 use crate::ui::{self, Component, Palette};
 use crate::views::{FullPullRequest, PullRequestList};
+use serde_json::value;
 use std::collections::VecDeque;
 use std::io::{self, Write};
 
 /// Stores relevant state for the Application
 pub struct AppState {
     dirty: bool,
-    view_index: usize,
     quitting: bool,
     pub user: User,
 }
@@ -40,7 +40,6 @@ impl AppState {
     /// ```
     /// let mut state = AppState {
     ///     dirty: true,
-    ///     view_index: 0,
     ///     quittinng: false,
     ///     user: user
     /// };
@@ -66,23 +65,36 @@ impl AppState {
         AppState {
             dirty: true,
             user,
-            view_index: 0,
             quitting: false,
         }
     }
 }
 
 pub struct App<'a> {
+    client: Client<'a>,
     palette: Palette<'a>,
     state: AppState,
     current_view: Box<dyn Component<'a>>,
     history: Stack<Command>,
 }
 
+pub fn get_pulls(
+    client: &gh::Client,
+    repo: &str,
+) -> Result<Vec<gh::PullRequest>, serde_json::error::Error> {
+    let url = format!("repos/bisondev/{}/pulls", repo);
+    let json = client.get(&url).unwrap();
+    debug!("{:#}", json);
+    let prs = value::from_value::<Vec<gh::PullRequest>>(json);
+    debug!("{:#?}", prs);
+    prs
+}
+
 impl<'a> App<'a> {
-    pub fn new(palette: Palette<'a>, state: AppState) -> App<'a> {
-        let prs = mock::pull_requests(mock::user("pat").unwrap()).unwrap();
+    pub fn new(palette: Palette<'a>, state: AppState, client: Client<'a>) -> App<'a> {
+        let prs = get_pulls(&client, "backend").unwrap();
         App {
+            client,
             palette,
             state,
             history: Stack::new(),
@@ -124,9 +136,8 @@ impl<'a> App<'a> {
                     debug!("[CMD]: {:?}", command);
                     match command {
                         Command::ShowPull(pr) => {
-                            self.history.push(Command::ListPulls(
-                                mock::pull_requests(mock::user("pat").unwrap()).unwrap(),
-                            ));
+                            let prs = get_pulls(&self.client, "backend").unwrap();
+                            self.history.push(Command::ListPulls(prs));
                             self.current_view = Box::new(FullPullRequest::new(pr));
                         }
                         _ => {}
