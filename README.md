@@ -1,4 +1,4 @@
-![Kitty Logo](https://gitlab.com/patallen/gittyhub/raw/develop/kitty.png "Kitty Logo")
+![Kitty Logo](logo.png "Kitty Logo")
 
 ##### Do all the things in the gittyhub that you can do on the github.
 ## Setup
