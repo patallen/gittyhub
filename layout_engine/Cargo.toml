@@ -1,0 +1,10 @@
+[package]
+name = "layout_engine"
+version = "0.1.0"
+authors = ["Patrick Allen <prallen90@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+termion = "*"
+log = "*"
+log4rs = "*"

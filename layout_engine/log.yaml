@@ -1,0 +1,14 @@
+# Scan this file for changes every 30 seconds
+refresh_rate: 30 seconds
+
+appenders:
+  layout:
+    kind: file
+    path: "log/layout.log"
+    encoder:
+      pattern: "{d} - {m}{n}"
+
+root:
+  level: debug
+  appenders:
+    - layout

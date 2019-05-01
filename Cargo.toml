@@ -20,3 +20,6 @@ version = "1.0.90"
 [dependencies.chrono]
 features = ["serde", "rustc-serialize"]
 version = "0.4.6"
+
+[dependencies.layout_engine]
+path = "./layout_engine"
